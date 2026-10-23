@@ -3,19 +3,43 @@ import os
 import psycopg
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 load_dotenv()
 
 from app import ai, auth, paypal
 
 
+def _secret_key():
+    """Read the session signing key, refusing to guess on a hosted deployment."""
+    key = os.getenv("FLASK_SECRET_KEY")
+    if key:
+        return key
+
+    if os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID"):
+        raise RuntimeError(
+            "FLASK_SECRET_KEY must be set on Render; refusing to start with the "
+            "development default, which would make session cookies forgeable."
+        )
+
+    return "dev-only-change-me"
+
+
 def create_app():
     app = Flask(__name__)
-    app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-only-change-me")
+    app.secret_key = _secret_key()
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
+        # Render terminates TLS; enable this (SESSION_COOKIE_SECURE=1) so the
+        # session cookie is never sent over plain HTTP.
+        SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "").lower()
+        in {"1", "true", "yes"},
     )
+
+    # Honour the X-Forwarded-Proto header from the host's proxy so url_for()
+    # builds https:// PayPal return URLs instead of http://.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     def get_db():
         return psycopg.connect(os.environ["DATABASE_URL"])

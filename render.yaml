@@ -1,0 +1,36 @@
+# Render Blueprint for ImpactFund AI.
+#
+# The app is server-rendered Flask, so the whole UI and the routes run in this
+# one web service. PostgreSQL lives on Supabase (see README "Deploy").
+#
+# Create it with: Render Dashboard -> New -> Blueprint -> pick this repo.
+# Values marked `sync: false` are not stored here; Render prompts for them
+# once and keeps them as service environment variables.
+
+services:
+  - type: web
+    name: impactfund-ai
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 60 --access-logfile - --error-logfile -
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      # Generated once by Render; sessions stay valid until the service is
+      # recreated. Never reuse the repo's development default here.
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      # Render terminates TLS, so the session cookie must be HTTPS-only.
+      - key: SESSION_COOKIE_SECURE
+        value: "1"
+      # Supabase -> Connect -> Session pooler, with ?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
