@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}ImpactFund AI{% endblock %}</title>
+    <meta name="description" content="{% block description %}ImpactFund AI — a community fundraising feed powered by AI and PayPal.{% endblock %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% include "partials/navbar.html" %}
+
+    <div class="layout">
+        <aside class="sidebar sidebar-left" aria-label="Shortcuts">
+            {% include "partials/sidebar_left.html" %}
+        </aside>
+
+        <main class="feed" id="main-content">
+            {% include "partials/flashes.html" %}
+            {% block content %}{% endblock %}
+        </main>
+
+        <aside class="sidebar sidebar-right" aria-label="Discover">
+            {% block right_sidebar %}
+                {% include "partials/sidebar_right.html" %}
+            {% endblock %}
+        </aside>
+    </div>
+
+    {% include "partials/mobile_nav.html" %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

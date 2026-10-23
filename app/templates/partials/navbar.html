@@ -1,0 +1,54 @@
+{% from "partials/ui.html" import icon, avatar %}
+<header class="topbar">
+    <div class="topbar-left">
+        <a class="brand" href="{{ url_for('home') }}" aria-label="ImpactFund AI home">
+            <span class="brand-mark">{{ icon('heart', 22) }}</span>
+            <span class="brand-name">ImpactFund <span>AI</span></span>
+        </a>
+
+        <form class="search" action="{{ url_for('home') }}" method="get" role="search">
+            {{ icon('search', 18) }}
+            <input type="search" name="q" value="{{ request.args.get('q', '') }}"
+                   placeholder="Search campaigns" aria-label="Search campaigns" maxlength="120">
+        </form>
+    </div>
+
+    <nav class="topnav" aria-label="Primary">
+        <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}"
+           title="Home">{{ icon('home', 22) }}<span>Home</span></a>
+        <a href="{{ url_for('home') }}#campaigns" class="{{ 'active' if request.endpoint == 'campaign_detail' else '' }}"
+           title="Campaigns">{{ icon('users', 22) }}<span>Campaigns</span></a>
+        {% if not current_user or current_user.role == 'organizer' %}
+        <a href="{{ url_for('ai_builder') }}" class="{{ 'active' if request.endpoint in ['ai_builder', 'ai_generate'] else '' }}"
+           title="AI builder">{{ icon('sparkles', 22) }}<span>AI Builder</span></a>
+        {% endif %}
+        <a href="{{ url_for('home') }}#how-it-works" title="How it works">{{ icon('compass', 22) }}<span>How it works</span></a>
+    </nav>
+
+    <div class="topbar-right">
+        {% if current_user %}
+            {% if current_user.role == 'organizer' %}
+            <a class="icon-btn" href="{{ url_for('create_campaign') }}" title="Create a campaign" aria-label="Create a campaign">
+                {{ icon('plus', 20) }}
+            </a>
+            {% else %}
+            <a class="icon-btn" href="{{ url_for('home') }}#campaigns" title="Find a campaign" aria-label="Find a campaign">
+                {{ icon('heart', 20) }}
+            </a>
+            {% endif %}
+
+            <span class="profile-chip" title="{{ current_user.name }} · {{ current_user.role_label }}">
+                {{ avatar(current_user.name, 36) }}
+            </span>
+
+            <form class="logout-form" method="post" action="{{ url_for('logout') }}">
+                <button class="icon-btn" type="submit" title="Log out" aria-label="Log out">
+                    {{ icon('logout', 20) }}
+                </button>
+            </form>
+        {% else %}
+            <a class="btn btn-secondary btn-sm topbar-login" href="{{ url_for('login') }}">Log in</a>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('signup') }}">Sign up</a>
+        {% endif %}
+    </div>
+</header>

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon %}
+
+{% block title %}Log in | ImpactFund AI{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <section class="auth-hero">
+        <span class="brand-mark auth-brand">{{ icon('heart', 26) }}</span>
+        <p class="auth-eyebrow">WELCOME BACK</p>
+        <h1>Your email knows <span>your role</span></h1>
+        <p>Log in with the email you signed up with. ImpactFund loads your donor or project-creator account automatically.</p>
+        <ul class="auth-points">
+            <li>{{ icon('heart', 16) }} <span><strong>Donors</strong> support campaigns with PayPal</span></li>
+            <li>{{ icon('target', 16) }} <span><strong>Project creators</strong> launch fundraisers</span></li>
+            <li>{{ icon('lock', 16) }} <span>Passwords are hashed, never stored as text</span></li>
+        </ul>
+    </section>
+
+    <section class="auth-panel">
+        <h2>Log in</h2>
+        <p class="muted auth-subtitle">No account type selector here — your account record decides.</p>
+
+        {% if error %}
+        <div class="flash error" role="alert">
+            {{ icon('info', 18) }}
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form class="auth-form" method="post" action="{{ url_for('login') }}">
+            {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" value="{{ email }}"
+                       autocomplete="email" maxlength="254" required autofocus
+                       placeholder="you@example.com">
+            </div>
+
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password"
+                       autocomplete="current-password" maxlength="200" required
+                       placeholder="Your password">
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit">Log in</button>
+        </form>
+
+        <div class="auth-divider"><span>New to ImpactFund AI?</span></div>
+
+        <a class="btn btn-secondary btn-block"
+           href="{{ url_for('signup', next=next_url) if next_url else url_for('signup') }}">
+            Create an account
+        </a>
+
+        <p class="auth-role-note">
+            {{ icon('info', 14) }}
+            Donor accounts can donate; project creator accounts can create campaigns.
+        </p>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% from "partials/ui.html" import icon %}
+<nav class="mobile-nav" aria-label="Mobile navigation">
+    <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">
+        {{ icon('home', 22) }}<span>Home</span>
+    </a>
+    <a href="{{ url_for('home') }}#campaigns" class="{{ 'active' if request.endpoint == 'campaign_detail' else '' }}">
+        {{ icon('users', 22) }}<span>Campaigns</span>
+    </a>
+    {% if current_user and current_user.role == 'donor' %}
+    <a class="mobile-nav-cta" href="{{ url_for('home') }}#campaigns" aria-label="Find a campaign">
+        {{ icon('heart', 22) }}
+    </a>
+    {% else %}
+    <a class="mobile-nav-cta" href="{{ url_for('create_campaign') }}" aria-label="Create a campaign">
+        {{ icon('plus', 22) }}
+    </a>
+    {% endif %}
+    {% if not current_user or current_user.role == 'organizer' %}
+    <a href="{{ url_for('ai_builder') }}" class="{{ 'active' if request.endpoint in ['ai_builder', 'ai_generate'] else '' }}">
+        {{ icon('sparkles', 22) }}<span>AI Builder</span>
+    </a>
+    {% endif %}
+    <a href="{{ url_for('home') }}#how-it-works">
+        {{ icon('compass', 22) }}<span>How it works</span>
+    </a>
+</nav>

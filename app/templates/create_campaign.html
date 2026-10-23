@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon %}
+
+{% block title %}Create a campaign | ImpactFund AI{% endblock %}
+
+{% block content %}
+<section class="card page-intro">
+    <span class="page-intro-icon tone-green">{{ icon('plus', 22) }}</span>
+    <div>
+        <h1>Create a campaign</h1>
+        <p>Share your idea with the community. You can always let the AI builder write the first draft.</p>
+        <p class="muted auth-inline">
+            {{ icon('user', 15) }}
+            Creating as <strong>{{ current_user.name }}</strong> · {{ current_user.role_label }}
+        </p>
+    </div>
+</section>
+
+<form class="card create-form" method="post" action="{{ url_for('create_campaign') }}">
+    <div class="form-body">
+        <div class="field">
+            <label for="title">Campaign title</label>
+            <input id="title" name="title" type="text" maxlength="140" required
+                   placeholder="e.g. Community garden for the neighbourhood">
+            <small>Keep it short and specific — this is the headline of your feed post.</small>
+        </div>
+
+        <div class="field">
+            <label for="description">Description</label>
+            <textarea id="description" name="description" rows="6" maxlength="4000" required
+                      placeholder="Tell the community about your project, what it will achieve, and who it helps."></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label for="organiser">Organiser</label>
+                <input id="organiser" name="organiser" type="text" maxlength="120" required
+                       value="{{ current_user.name }}"
+                       placeholder="Your name or organisation">
+            </div>
+            <div class="field">
+                <label for="goal">Fundraising target (USD)</label>
+                <div class="amount-field">
+                    <span>$</span>
+                    <input id="goal" name="goal" type="number" min="0.01" max="9999999999.99"
+                           step="0.01" required placeholder="500">
+                    <span class="amount-suffix">USD</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-hint">
+            {{ icon('lock', 16) }}
+            <span>Donations are collected through PayPal sandbox. No real money moves.</span>
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('home') }}">Cancel</a>
+            <button class="btn btn-primary" type="submit">
+                {{ icon('plus', 18) }} Create campaign
+            </button>
+        </div>
+    </div>
+</form>
+
+<section class="card ai-nudge">
+    <span class="side-icon tone-purple">{{ icon('sparkles', 18) }}</span>
+    <div>
+        <strong>Not sure what to write?</strong>
+        <p>Use the AI builder to draft a story, a budget, and three milestones first.</p>
+    </div>
+    <a class="btn btn-secondary" href="{{ url_for('ai_builder') }}">Try the AI builder</a>
+</section>
+{% endblock %}

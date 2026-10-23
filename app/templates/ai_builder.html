@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon %}
+
+{% block title %}AI Campaign Builder | ImpactFund AI{% endblock %}
+
+{% block content %}
+<section class="card page-intro">
+    <span class="page-intro-icon tone-purple">{{ icon('sparkles', 22) }}</span>
+    <div>
+        <span class="pill">{{ icon('sparkles', 13) }} Powered by AI</span>
+        <h1>Turn your idea into impact</h1>
+        <p>Describe your community project. The AI builder prepares a campaign story, a suggested budget, and three milestones.</p>
+        <p class="muted auth-inline">
+            {{ icon('user', 15) }}
+            Planning as <strong>{{ current_user.name }}</strong> · {{ current_user.role_label }}
+        </p>
+    </div>
+</section>
+
+{% if error %}
+<div class="flash error" role="alert">
+    {{ icon('info', 18) }}
+    <span>{{ error }}</span>
+</div>
+{% endif %}
+
+<form class="card create-form" method="post" action="{{ url_for('ai_generate') }}">
+    <div class="form-body">
+        <div class="field">
+            <label for="idea">What do you want to achieve?</label>
+            <textarea id="idea" name="idea" rows="6" required maxlength="3000"
+                      placeholder="Example: We want to provide 20 computers to a rural community school so students can learn digital skills.">{{ form.idea if form }}</textarea>
+            <small>The more specific you are, the better the plan.</small>
+        </div>
+
+        <div class="form-row">
+            <div class="field">
+                <label for="beneficiaries">Who will benefit?</label>
+                <input id="beneficiaries" name="beneficiaries" type="text" required maxlength="300"
+                       value="{{ form.beneficiaries if form }}"
+                       placeholder="Example: 200 secondary school students">
+            </div>
+            <div class="field">
+                <label for="budget">Estimated budget in USD <span class="optional">(optional)</span></label>
+                <div class="amount-field">
+                    <span>$</span>
+                    <input id="budget" name="budget" type="number" min="1" max="10000000" step="0.01"
+                           value="{{ form.budget if form }}" placeholder="5000">
+                    <span class="amount-suffix">USD</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-hint">
+            {{ icon('sparkles', 16) }}
+            <span>This uses Groq's open model. Generation usually takes a few seconds.</span>
+        </div>
+
+        <div class="form-actions">
+            <a class="btn btn-secondary" href="{{ url_for('home') }}">Cancel</a>
+            <button class="btn btn-primary" type="submit">
+                {{ icon('sparkles', 18) }} Generate my campaign plan
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon %}
+
+{% block title %}Your campaign plan | ImpactFund AI{% endblock %}
+
+{% block content %}
+<section class="card plan-hero">
+    <span class="pill">{{ icon('sparkles', 13) }} AI generated</span>
+    <h1>Your campaign plan is ready</h1>
+    <p>{{ idea }}</p>
+    {% if beneficiaries %}
+    <p class="muted">{{ icon('users', 15) }} Reaching {{ beneficiaries }}</p>
+    {% endif %}
+</section>
+
+<article class="card plan-card">
+    <div class="plan-section">
+        <div class="plan-section-head">
+            <h2>Your story</h2>
+            <button class="btn btn-secondary btn-sm" type="button" data-copy="{{ plan.story }}">
+                {{ icon('bookmark', 15) }} Copy story
+            </button>
+        </div>
+        <p class="plan-story">{{ plan.story }}</p>
+    </div>
+
+    <div class="plan-stats">
+        <div class="plan-stat">
+            <span>Suggested budget</span>
+            <strong>${{ "{:,.0f}".format(plan.suggested_budget) }}</strong>
+        </div>
+        <div class="plan-stat">
+            <span>Milestones</span>
+            <strong>{{ plan.milestones|length }}</strong>
+        </div>
+        <div class="plan-stat">
+            <span>Best used for</span>
+            <strong>A 30-day launch</strong>
+        </div>
+    </div>
+
+    <div class="plan-section">
+        <h2>Milestones</h2>
+        <ol class="milestones">
+            {% for milestone in plan.milestones %}
+            <li>
+                <span class="milestone-number">{{ loop.index }}</span>
+                <span>{{ milestone }}</span>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+
+    <div class="plan-actions">
+        <a class="btn btn-primary" href="{{ url_for('create_campaign') }}">
+            {{ icon('plus', 18) }} Start this campaign
+        </a>
+        <a class="btn btn-secondary" href="{{ url_for('ai_builder') }}">
+            {{ icon('sparkles', 18) }} Plan another idea
+        </a>
+    </div>
+</article>
+
+<p class="feed-end">{{ icon('info', 16) }} AI drafts are a starting point — review the details before publishing.</p>
+{% endblock %}
+
+{% block right_sidebar %}
+<section class="card card-pad">
+    <h3>Next steps</h3>
+    <ul class="about-list">
+        <li>{{ icon('check', 18) }}<span><strong>Refine the story</strong>Add your own voice before posting.</span></li>
+        <li>{{ icon('target', 18) }}<span><strong>Set the goal</strong>Start with the suggested budget and adjust.</span></li>
+        <li>{{ icon('share', 18) }}<span><strong>Share widely</strong>Post the campaign link in your community.</span></li>
+    </ul>
+    <a class="btn btn-secondary btn-block" href="{{ url_for('home') }}#how-it-works">
+        How fundraising works
+    </a>
+</section>
+{% endblock %}

@@ -1,0 +1,110 @@
+{% from "partials/ui.html" import icon, avatar, percent %}
+{% set suggestions = side_campaigns|default(campaigns[0:3] if campaigns else []) %}
+{% set is_organizer = current_user and current_user.role == 'organizer' %}
+{% set is_donor = current_user and current_user.role == 'donor' %}
+
+<section class="card side-card">
+    <div class="card-head">
+        <h3>Suggested for you</h3>
+        <span class="card-head-icon">{{ icon('sparkles', 16) }}</span>
+    </div>
+
+    {% if is_organizer %}
+    <a class="side-row" href="{{ url_for('ai_builder') }}">
+        <span class="side-icon tone-purple">{{ icon('sparkles', 18) }}</span>
+        <span class="side-row-text">
+            <strong>Try the AI builder</strong>
+            <small>Turn an idea into a campaign plan</small>
+        </span>
+    </a>
+    <a class="side-row" href="{{ url_for('create_campaign') }}">
+        <span class="side-icon tone-green">{{ icon('plus', 18) }}</span>
+        <span class="side-row-text">
+            <strong>Create a campaign</strong>
+            <small>Start raising for your community</small>
+        </span>
+    </a>
+    {% elif is_donor %}
+    <a class="side-row" href="{{ url_for('home') }}#campaigns">
+        <span class="side-icon tone-green">{{ icon('heart', 18) }}</span>
+        <span class="side-row-text">
+            <strong>Find a campaign</strong>
+            <small>Support a project with PayPal</small>
+        </span>
+    </a>
+    <a class="side-row" href="{{ url_for('home') }}#how-it-works">
+        <span class="side-icon tone-blue">{{ icon('dollar', 18) }}</span>
+        <span class="side-row-text">
+            <strong>How donations work</strong>
+            <small>From checkout to campaign total</small>
+        </span>
+    </a>
+    {% else %}
+    <a class="side-row" href="{{ url_for('signup') }}">
+        <span class="side-icon tone-green">{{ icon('user', 18) }}</span>
+        <span class="side-row-text">
+            <strong>Create an account</strong>
+            <small>Join as a donor or project creator</small>
+        </span>
+    </a>
+    <a class="side-row" href="{{ url_for('login') }}">
+        <span class="side-icon tone-blue">{{ icon('lock', 18) }}</span>
+        <span class="side-row-text">
+            <strong>Log in</strong>
+            <small>Pick up where you left off</small>
+        </span>
+    </a>
+    {% endif %}
+
+    <a class="side-row" href="{{ url_for('home') }}#how-it-works">
+        <span class="side-icon tone-orange">{{ icon('compass', 18) }}</span>
+        <span class="side-row-text">
+            <strong>How fundraising works</strong>
+            <small>Plan, share, and collect support</small>
+        </span>
+    </a>
+</section>
+
+{% if suggestions %}
+<section class="card side-card">
+    <div class="card-head">
+        <h3>Fundraisers for you</h3>
+    </div>
+    {% for c in suggestions %}
+    <a class="side-row" href="{{ url_for('campaign_detail', campaign_id=c[0]) }}">
+        {{ avatar(c[3], 40) }}
+        <span class="side-row-text">
+            <strong>{{ c[1]|truncate(34) }}</strong>
+            <small>{{ percent(c[5], c[4]) }}% funded · ${{ "{:,.0f}".format(c[5]) }} raised</small>
+        </span>
+    </a>
+    {% endfor %}
+    <a class="side-row side-row-more" href="{{ url_for('home') }}#campaigns">
+        See all campaigns {{ icon('arrow-right', 14) }}
+    </a>
+</section>
+{% endif %}
+
+<section class="card side-card side-promo">
+    <span class="side-icon tone-blue">{{ icon('lock', 18) }}</span>
+    <div>
+        <strong>Give with confidence</strong>
+        <p>Payments run through the PayPal sandbox, so you can try the full flow without spending a cent.</p>
+    </div>
+</section>
+
+<footer class="side-footer">
+    <a href="{{ url_for('home') }}">Home</a>
+    {% if is_organizer %}
+    <a href="{{ url_for('ai_builder') }}">AI Builder</a>
+    <a href="{{ url_for('create_campaign') }}">Start a campaign</a>
+    {% elif is_donor %}
+    <a href="{{ url_for('home') }}#campaigns">Find a campaign</a>
+    <a href="{{ url_for('home') }}#how-it-works">How it works</a>
+    {% else %}
+    <a href="{{ url_for('login') }}">Log in</a>
+    <a href="{{ url_for('signup') }}">Sign up</a>
+    {% endif %}
+    <a href="{{ url_for('health') }}">Status</a>
+    <p>ImpactFund AI © 2026 · Built with PayPal + AI</p>
+</footer>

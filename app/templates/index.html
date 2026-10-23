@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon %}
+
+{% block title %}ImpactFund AI | Fundraising feed{% endblock %}
+
+{% block content %}
+    {% if not q %}
+        {% include "partials/story_bar.html" %}
+        {% include "partials/composer.html" %}
+    {% endif %}
+
+    {% if q %}
+    <div class="feed-note">
+        {{ icon('search', 16) }}
+        <span>Results for <strong>“{{ q }}”</strong></span>
+        <a href="{{ url_for('home') }}">Clear</a>
+    </div>
+    {% endif %}
+
+    <div class="feed-posts" id="campaigns">
+        {% if campaigns %}
+            {% for campaign in campaigns %}
+                {% include "partials/campaign_card.html" %}
+            {% endfor %}
+        {% else %}
+        <section class="card empty-state">
+            <span class="empty-icon tone-blue">{{ icon('sparkles', 26) }}</span>
+            {% if q %}
+                <h2>No campaigns match “{{ q }}”</h2>
+                <p>Try a different search.</p>
+            {% elif current_user and current_user.role == 'donor' %}
+                <h2>No campaigns to support yet</h2>
+                <p>Project creators haven't published a fundraiser yet. Check back soon.</p>
+            {% else %}
+                <h2>Your community's next big idea belongs here</h2>
+                <p>Be the first to start a campaign. Our AI builder will help you write the story.</p>
+            {% endif %}
+            <div class="empty-actions">
+                {% if current_user and current_user.role == 'donor' %}
+                <a class="btn btn-secondary" href="{{ url_for('home') }}#how-it-works">
+                    {{ icon('compass', 18) }} How it works
+                </a>
+                {% else %}
+                <a class="btn btn-primary" href="{{ url_for('create_campaign') }}">
+                    {{ icon('plus', 18) }} Start a campaign
+                </a>
+                <a class="btn btn-secondary" href="{{ url_for('ai_builder') }}">
+                    {{ icon('sparkles', 18) }} Plan with AI
+                </a>
+                {% endif %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+
+    <section class="card how-card" id="how-it-works">
+        <div class="card-head">
+            <h2>How fundraising works</h2>
+            <span class="card-head-icon">{{ icon('compass', 16) }}</span>
+        </div>
+        <div class="how-steps">
+            <article>
+                <span class="how-number tone-green">1</span>
+                <div>
+                    <strong>Share your idea</strong>
+                    <p>Tell the community what you want to bring to life and who it helps.</p>
+                </div>
+            </article>
+            <article>
+                <span class="how-number tone-purple">2</span>
+                <div>
+                    <strong>Let AI help</strong>
+                    <p>Generate a campaign story, a suggested budget, and achievable milestones.</p>
+                </div>
+            </article>
+            <article>
+                <span class="how-number tone-blue">3</span>
+                <div>
+                    <strong>Gather support</strong>
+                    <p>Share your fundraiser and collect donations through PayPal.</p>
+                </div>
+            </article>
+        </div>
+        {% if current_user and current_user.role == 'donor' %}
+        <a class="btn btn-secondary" href="{{ url_for('home') }}#campaigns">
+            {{ icon('users', 18) }} Browse campaigns
+        </a>
+        {% else %}
+        <a class="btn btn-secondary" href="{{ url_for('ai_builder') }}">
+            {{ icon('sparkles', 18) }} Build my campaign plan
+        </a>
+        {% endif %}
+    </section>
+
+    {% if campaigns and not q %}
+    <p class="feed-end">{{ icon('check', 16) }} You're all caught up.</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,27 @@
+{% from "partials/ui.html" import icon, avatar %}
+{% set tones = ['blue', 'purple', 'green', 'orange'] %}
+{% set can_create = not current_user or current_user.role == 'organizer' %}
+{% set limit = 3 if can_create else 4 %}
+
+{% if campaigns or can_create %}
+<section class="stories" aria-label="Campaign stories">
+    {% if can_create %}
+    <a class="story story-create" href="{{ url_for('create_campaign') }}">
+        <span class="story-create-top">
+            {% if current_user %}{{ avatar(current_user.name, 32) }}{% else %}{{ avatar('Guest', 32) }}{% endif %}
+        </span>
+        <span class="story-create-plus">{{ icon('plus', 18) }}</span>
+        <span class="story-create-label">Create a campaign</span>
+    </a>
+    {% endif %}
+
+    {% for campaign in campaigns[:limit] %}
+    <a class="story tone-{{ tones[loop.index0 % 4] }}"
+       href="{{ url_for('campaign_detail', campaign_id=campaign[0]) }}">
+        <span class="story-avatar">{{ avatar(campaign[3], 32) }}</span>
+        <span class="story-eyebrow">FUNDRAISER</span>
+        <span class="story-title">{{ campaign[1]|truncate(52) }}</span>
+    </a>
+    {% endfor %}
+</section>
+{% endif %}

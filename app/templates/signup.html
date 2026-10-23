@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon %}
+
+{% block title %}Create an account | ImpactFund AI{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <section class="auth-hero">
+        <span class="brand-mark auth-brand">{{ icon('heart', 26) }}</span>
+        <p class="auth-eyebrow">JOIN THE COMMUNITY</p>
+        <h1>Pick your <span>role</span></h1>
+        <p>One email, one account, one clear purpose. You can log in from any device with the same email.</p>
+        <ul class="auth-points">
+            <li>{{ icon('heart', 16) }} <span><strong>Donor</strong> — find a cause and give with PayPal</span></li>
+            <li>{{ icon('target', 16) }} <span><strong>Project creator</strong> — build a campaign with AI</span></li>
+            <li>{{ icon('users', 16) }} <span>Both roles share the same community feed</span></li>
+        </ul>
+    </section>
+
+    <section class="auth-panel">
+        <h2>Create your account</h2>
+        <p class="muted auth-subtitle">Your email becomes your login. Choose the type of account you need.</p>
+
+        {% if error %}
+        <div class="flash error" role="alert">
+            {{ icon('info', 18) }}
+            <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form class="auth-form" method="post" action="{{ url_for('signup') }}">
+            {% if next_url %}<input type="hidden" name="next" value="{{ next_url }}">{% endif %}
+
+            <div class="field">
+                <label for="name">Name or organisation</label>
+                <input id="name" name="name" type="text" value="{{ form.name }}"
+                       autocomplete="name" maxlength="120" required autofocus
+                       placeholder="e.g. Amina Yusuf or Green Roots Collective">
+            </div>
+
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" value="{{ form.email }}"
+                       autocomplete="email" maxlength="254" required
+                       placeholder="you@example.com">
+            </div>
+
+            <fieldset class="role-picker">
+                <legend>Account type</legend>
+
+                <label class="role-option">
+                    <input type="radio" name="role" value="donor"
+                           {{ 'checked' if form.role != 'organizer' else '' }}>
+                    <span class="side-icon tone-green">{{ icon('heart', 18) }}</span>
+                    <span class="role-option-text">
+                        <strong>Donor</strong>
+                        <small>Support projects and donate with PayPal</small>
+                    </span>
+                </label>
+
+                <label class="role-option">
+                    <input type="radio" name="role" value="organizer"
+                           {{ 'checked' if form.role == 'organizer' else '' }}>
+                    <span class="side-icon tone-purple">{{ icon('target', 18) }}</span>
+                    <span class="role-option-text">
+                        <strong>Project creator</strong>
+                        <small>Create campaigns and use the AI planner</small>
+                    </span>
+                </label>
+            </fieldset>
+
+            <div class="form-row">
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input id="password" name="password" type="password"
+                           autocomplete="new-password" minlength="8" maxlength="200" required
+                           placeholder="At least 8 characters">
+                </div>
+                <div class="field">
+                    <label for="confirm_password">Confirm password</label>
+                    <input id="confirm_password" name="confirm_password" type="password"
+                           autocomplete="new-password" minlength="8" maxlength="200" required
+                           placeholder="Repeat your password">
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-block" type="submit">Create account</button>
+        </form>
+
+        <div class="auth-divider"><span>Already have an account?</span></div>
+
+        <a class="btn btn-secondary btn-block"
+           href="{{ url_for('login', next=next_url) if next_url else url_for('login') }}">
+            Log in instead
+        </a>
+    </section>
+</div>
+{% endblock %}

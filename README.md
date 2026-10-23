@@ -1,0 +1,158 @@
+# ImpactFund AI
+
+A Flask crowdfunding platform that meaningfully combines **PayPal** (sandbox payments)
+with **AI** (Groq, OpenAI-compatible LLM) to help community projects turn ideas into
+fundraising campaigns.
+
+> **Hackathon submission** — *Build What's Next with PayPal and AI* (PayPal + AI hackathon)
+
+## What it does
+
+- **Two account types** — email/password accounts for **donors** and **project creators**.
+  The role is stored with the account and resolved from the email at login.
+- **Facebook-style feed** — a three-column home page with stories, a composer, fundraiser
+  posts, a search bar, and a "Suggested for you" sidebar.
+- **Campaign discovery** — search active campaigns by title, description, or organiser.
+- **AI campaign builder** — describe your idea and the beneficiaries; an LLM generates a
+  storytelling paragraph, a suggested budget, and a 3-step milestone plan.
+- **Create a campaign** — set a title, description, organiser, and fundraising goal.
+- **PayPal donations** — choose an amount, approve it in the PayPal sandbox, and the
+  captured total is added to the campaign's `amount_raised`.
+- **Campaign detail page** — cover banner, progress bar, organiser card, and a donation
+  card with preset amounts.
+- **Role-aware UI** — guests see login/signup prompts, donors see giving shortcuts, and
+  project creators see campaign and AI-planner actions.
+
+## UI structure
+
+The frontend is broken into small templates so each part of the feed can change
+independently:
+
+```text
+app/templates/
+├── base.html                 # top bar + three-column shell + flash slot
+├── index.html                # news feed
+├── login.html                # email/password sign-in
+├── signup.html               # account creation + role picker
+├── campaign_detail.html      # fundraiser post + donation card
+├── create_campaign.html      # composer-style form
+├── ai_builder.html           # AI prompt form
+├── ai_plan.html              # generated story, budget, milestones
+└── partials/
+    ├── navbar.html           # brand, search, primary tabs, quick actions
+    ├── sidebar_left.html     # profile + shortcuts
+    ├── sidebar_right.html    # suggestions + campaign spotlight
+    ├── story_bar.html        # stories row
+    ├── composer.html         # "What's on your mind?"
+    ├── campaign_card.html    # one fundraiser feed post
+    ├── mobile_nav.html       # fixed bottom navigation
+    ├── flashes.html          # success/error messages
+    └── ui.html               # icon, avatar, progress macros
+```
+
+Styles live in `app/static/css/style.css` (design tokens at the top), and
+`app/static/js/main.js` handles like toggles, share links, donation amount chips,
+and the copy-to-clipboard toast.
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Flask 3.1.3 (Python) |
+| Database | PostgreSQL (`psycopg` 3) |
+| Payments | PayPal REST SDK (`paypalrestsdk`) — sandbox |
+| AI | `openai` 3.35.1 — Groq (OpenAI-compatible) |
+| Config | `python-dotenv` + `.env` |
+| Host / Proc | Gunicorn 26.2.0 |
+
+## Prerequisites
+
+- Python 3.11+ (project uses Python 3.14 in this repo)
+- PostgreSQL running and reachable via `DATABASE_URL`
+- A **PayPal Developer** sandbox account (free) — get `PAYPAL_CLIENT_ID` and
+  `PAYPAL_CLIENT_SECRET`
+- A **Groq** API key (free) — get it at https://console.groq.com/keys
+
+## Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Create a .env file (see .env.example below) and fill in:
+#   DATABASE_URL=postgresql://user:pass@localhost:5432/impactfund
+#   FLASK_SECRET_KEY=change-me
+#   GROQ_API_KEY=<your Groq key>
+#   PAYPAL_CLIENT_ID=<your PayPal sandbox client id>
+#   PAYPAL_CLIENT_SECRET=<your PayPal sandbox client secret>
+
+# Create/upgrade the tables (accounts + campaigns)
+psql "$DATABASE_URL" -f schema.sql
+```
+
+## Run
+
+```bash
+# Development
+source .venv/bin/activate
+python run.py            # http://localhost:5000
+
+# Production
+gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
+```
+
+## Routes
+
+| Route | Method | Access | Description |
+|---|---|---|---|
+| `/` | GET | Public | Home feed — browse/search active campaigns (`?q=`) |
+| `/signup` | GET/POST | Public | Create a donor or project-creator account |
+| `/login` | GET/POST | Public | Sign in; the account role is resolved from the email |
+| `/logout` | POST | Signed in | Clear the session |
+| `/campaigns/new` | GET/POST | Project creator | Create a campaign owned by the account |
+| `/campaigns/<id>` | GET | Public | Campaign detail (with PayPal donation card) |
+| `/campaigns/<id>/donate` | POST | Signed in | Create a PayPal sandbox payment for `amount` |
+| `/campaigns/<id>/payment-executed` | GET | PayPal redirect | Execute the payment and record it |
+| `/ai/builder` | GET | Project creator | AI campaign-plan form |
+| `/ai/builder/generate` | POST | Project creator | Ask the LLM for a campaign plan |
+| `/health` | GET | Public | Health check (DB status) |
+
+## Accounts and roles
+
+Accounts live in the `users` table. Emails are stored lowercase and unique, and each
+account has a `role` of either `donor` or `organizer` (shown as **Project creator**).
+The signup form picks the role once; the login form only asks for email and password
+and reads the role from that email's account record. Passwords are hashed with
+Werkzeug's password hashing and sessions are signed HTTP-only cookies with
+`SameSite=Lax`.
+
+- **Donor** — can sign in, browse the feed, and donate. Donors do not see campaign
+  creation or AI-planner actions.
+- **Project creator** — can create campaigns, use the AI planner, and donate to other
+  campaigns. Campaigns store the creator's `owner_id`.
+
+Guests can browse campaigns and are redirected to `/login?next=…` when they try to
+donate, create a campaign, or open the AI planner.
+
+## AI (Groq)
+
+The project uses the `openai` package against **Groq** (`https://api.groq.com/openai/v1`).
+The `GROQ_API_KEY` is read from `.env`, and `GROQ_MODEL` can override the default
+`llama-3.3-70b-versatile`. The system prompt asks the model for a JSON object with
+`story`, `suggested_budget`, and `milestones`.
+
+## PayPal
+
+PayPal is configured in sandbox mode. The `/donate` route (signed-in users only) creates a PayPal v1 payment
+for the amount chosen in the donation card and redirects the donor to PayPal's approval
+page. After approval, PayPal returns to `/campaigns/<id>/payment-executed`, where the
+payment is executed and the captured amount is added to `amount_raised`. Cancelling at
+PayPal returns to the campaign with a "not charged" message.
+
+## Submission files
+
+- `README.md` — this file
+- `schema.sql` — database tables for accounts and campaigns
+- `LICENSE` — MIT license
+- `docs/` — supplementary documentation

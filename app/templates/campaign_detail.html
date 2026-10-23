@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% from "partials/ui.html" import icon, avatar, progress, percent %}
+{% set c = campaign %}
+{% set tones = ['blue', 'purple', 'green', 'orange'] %}
+{% set tone = tones[c[0] % 4] %}
+
+{% block title %}{{ c[1] }} | ImpactFund AI{% endblock %}
+{% block description %}{{ c[2]|truncate(150) }}{% endblock %}
+
+{% block content %}
+<article class="post detail-post">
+    <div class="detail-cover tone-{{ tone }}">
+        <span class="post-media-badge">{{ icon('users', 16) }} COMMUNITY FUNDRAISER</span>
+        <h1>{{ c[1] }}</h1>
+        <span class="detail-cover-meta">Organised by {{ c[3] }}</span>
+    </div>
+
+    <header class="post-head detail-head">
+        {{ avatar(c[3], 44) }}
+        <div class="post-author-block">
+            <a class="post-author" href="{{ url_for('home') }}#campaigns">{{ c[3] }}</a>
+            <div class="post-meta">
+                <span>{{ c[7].strftime('%b %d, %Y') if c[7] else 'New campaign' }}</span>
+                <span>·</span>
+                {{ icon('globe', 12) }}
+                <span>Public fundraiser</span>
+                <span class="status-badge">{{ c[6]|capitalize }}</span>
+            </div>
+        </div>
+    </header>
+
+    <p class="post-text detail-text">{{ c[2] }}</p>
+
+    <div class="post-stats detail-stats">
+        <p class="raise-line">
+            <strong>${{ "{:,.2f}".format(c[5]) }}</strong> raised of
+            <strong>${{ "{:,.2f}".format(c[4]) }}</strong> goal
+        </p>
+        {{ progress(c[5], c[4]) }}
+        <div class="raise-meta">
+            <span>{{ percent(c[5], c[4]) }}% funded</span>
+            <span>·</span>
+            <span>Every donation counts</span>
+        </div>
+    </div>
+
+    <footer class="post-actions">
+        <button class="post-action" type="button" data-like aria-pressed="false">
+            {{ icon('heart', 18) }}<span class="label">Like</span>
+        </button>
+        <a class="post-action" href="#support">
+            {{ icon('dollar', 18) }}<span>Donate</span>
+        </a>
+        <button class="post-action" type="button" data-share
+                data-url="{{ url_for('campaign_detail', campaign_id=c[0], _external=True) }}">
+            {{ icon('share', 18) }}<span>Share</span>
+        </button>
+        <a class="post-action post-action-primary" href="{{ url_for('home') }}#campaigns">
+            {{ icon('arrow-left', 18) }}<span>Back to feed</span>
+        </a>
+    </footer>
+</article>
+
+<section class="card card-pad donate-card" id="support">
+    <h2 class="donate-title">Support this fundraiser</h2>
+    <p class="raise-label">Raised so far</p>
+    <p class="raise-amount">${{ "{:,.0f}".format(c[5]) }}</p>
+    <p class="raise-goal">of ${{ "{:,.0f}".format(c[4]) }} goal</p>
+    {{ progress(c[5], c[4]) }}
+    <p class="raise-meta">{{ percent(c[5], c[4]) }}% funded</p>
+
+    {% if current_user and current_user.id == c[8] %}
+    <div class="owner-note">
+        {{ icon('check', 18) }}
+        <span>You're organising this campaign. Share it to bring in donations.</span>
+    </div>
+    {% elif current_user %}
+    <p class="donate-as">
+        {{ avatar(current_user.name, 26) }}
+        <span>Donating as <strong>{{ current_user.name }}</strong> ({{ current_user.role_label }})</span>
+    </p>
+
+    <div class="amount-chips" role="group" aria-label="Suggested donation amounts">
+        {% for amount in [10, 25, 50, 100] %}
+        <button type="button" class="amount-chip {{ 'active' if loop.first else '' }}"
+                data-amount="{{ amount }}">${{ amount }}</button>
+        {% endfor %}
+    </div>
+
+    <form class="donate-form" method="post"
+          action="{{ url_for('create_order', campaign_id=c[0]) }}">
+        <label class="sr-only" for="amount">Donation amount in USD</label>
+        <div class="amount-field">
+            <span>$</span>
+            <input id="amount" name="amount" type="number" min="1" max="100000"
+                   step="1" value="10" inputmode="decimal" required>
+            <span class="amount-suffix">USD</span>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit">
+            {{ icon('heart', 18) }} Donate with PayPal
+        </button>
+    </form>
+    {% else %}
+    <div class="donate-login">
+        <p>Log in with your donor account to support this campaign.</p>
+        <a class="btn btn-primary btn-block"
+           href="{{ url_for('login', next=request.path ~ '#support') }}">
+            {{ icon('lock', 18) }} Log in to donate
+        </a>
+        <a class="btn btn-secondary btn-block"
+           href="{{ url_for('signup', next=request.path ~ '#support', role='donor') }}">
+            {{ icon('user', 18) }} Create a donor account
+        </a>
+    </div>
+    {% endif %}
+
+    <button class="btn btn-secondary btn-block" type="button" data-share
+            data-url="{{ url_for('campaign_detail', campaign_id=c[0], _external=True) }}">
+        {{ icon('share', 18) }} Share this fundraiser
+    </button>
+
+    <p class="secure-note">{{ icon('lock', 14) }} Secure checkout through PayPal sandbox</p>
+</section>
+
+<section class="card card-pad about-card">
+    <h2>About this fundraiser</h2>
+    <ul class="about-list">
+        <li>
+            {{ icon('users', 18) }}
+            <span><strong>Organiser</strong>{{ c[3] }}</span>
+        </li>
+        <li>
+            {{ icon('calendar', 18) }}
+            <span><strong>Created</strong>{{ c[7].strftime('%B %d, %Y') if c[7] else 'Recently' }}</span>
+        </li>
+        <li>
+            {{ icon('target', 18) }}
+            <span><strong>Fundraising goal</strong>${{ "{:,.2f}".format(c[4]) }} USD</span>
+        </li>
+        <li>
+            {{ icon('lock', 18) }}
+            <span><strong>Payments</strong>Secured by PayPal sandbox</span>
+        </li>
+    </ul>
+</section>
+{% endblock %}
+
+{% block right_sidebar %}
+<aside class="card card-pad organiser-card">
+    <h3>Meet the organiser</h3>
+    <div class="organiser-row">
+        {{ avatar(c[3], 48) }}
+        <div>
+            <strong>{{ c[3] }}</strong>
+            <small>Campaign organiser</small>
+        </div>
+    </div>
+    <p class="muted">Funds raised go directly toward this campaign's goal.</p>
+    <a class="btn btn-secondary btn-block" href="{{ url_for('home') }}#campaigns">
+        See more campaigns
+    </a>
+</aside>
+
+{% include "partials/sidebar_right.html" %}
+{% endblock %}

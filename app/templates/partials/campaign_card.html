@@ -1,0 +1,58 @@
+{% from "partials/ui.html" import icon, avatar, progress, percent %}
+{% set c = campaign %}
+{% set tones = ['blue', 'purple', 'green', 'orange'] %}
+{% set tone = tones[c[0] % 4] %}
+{% set link = url_for('campaign_detail', campaign_id=c[0]) %}
+
+<article class="post" id="campaign-{{ c[0] }}">
+    <header class="post-head">
+        {{ avatar(c[3], 40) }}
+        <div class="post-author-block">
+            <a class="post-author" href="{{ link }}">{{ c[3] }}</a>
+            <div class="post-meta">
+                <span>{{ c[7].strftime('%b %d') if c[7] else 'New' }}</span>
+                <span>·</span>
+                {{ icon('globe', 12) }}
+                <span>Public fundraiser</span>
+            </div>
+        </div>
+        <button class="icon-btn icon-btn-ghost" type="button" aria-label="More options">{{ icon('more', 20) }}</button>
+    </header>
+
+    <p class="post-text">{{ c[2]|truncate(170) }}</p>
+
+    <a class="post-media tone-{{ tone }}" href="{{ link }}">
+        <span class="post-media-badge">{{ icon('heart', 16) }} COMMUNITY FUNDRAISER</span>
+        <span class="post-media-title">{{ c[1] }}</span>
+        <span class="post-media-cta">View campaign {{ icon('arrow-right', 16) }}</span>
+    </a>
+
+    <div class="post-stats">
+        <p class="raise-line">
+            <strong>${{ "{:,.0f}".format(c[5]) }}</strong> raised of
+            <strong>${{ "{:,.0f}".format(c[4]) }}</strong> goal
+        </p>
+        {{ progress(c[5], c[4]) }}
+        <div class="raise-meta">
+            <span>{{ percent(c[5], c[4]) }}% funded</span>
+            <span>·</span>
+            <span>Organised by {{ c[3] }}</span>
+        </div>
+    </div>
+
+    <footer class="post-actions">
+        <button class="post-action" type="button" data-like aria-pressed="false">
+            {{ icon('heart', 18) }}<span class="label">Like</span>
+        </button>
+        <a class="post-action" href="{{ link }}#support">
+            {{ icon('dollar', 18) }}<span>Donate</span>
+        </a>
+        <button class="post-action" type="button" data-share
+                data-url="{{ url_for('campaign_detail', campaign_id=c[0], _external=True) }}">
+            {{ icon('share', 18) }}<span>Share</span>
+        </button>
+        <a class="post-action post-action-primary" href="{{ link }}">
+            {{ icon('arrow-right', 18) }}<span>View</span>
+        </a>
+    </footer>
+</article>
