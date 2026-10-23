@@ -25,7 +25,9 @@ services:
       # Render terminates TLS, so the session cookie must be HTTPS-only.
       - key: SESSION_COOKIE_SECURE
         value: "1"
-      # Supabase -> Connect -> Session pooler, with ?sslmode=require
+      # Supabase -> Connect -> Session pooler, with ?sslmode=require.
+      # Paste the URI after creating the project (sync: false => prompted on
+      # Blueprint creation, never stored in this file).
       - key: DATABASE_URL
         sync: false
       - key: GROQ_API_KEY
