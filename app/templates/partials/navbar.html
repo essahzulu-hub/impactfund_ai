@@ -2,8 +2,8 @@
 <header class="topbar">
     <div class="topbar-left">
         <a class="brand" href="{{ url_for('home') }}" aria-label="ImpactFund AI home">
-            <span class="brand-mark">{{ icon('heart', 22) }}</span>
-            <span class="brand-name">ImpactFund <span>AI</span></span>
+            <span class="brand-mark"><img src="{{ url_for('static', filename='images/impactfund-mark.png') }}" alt=""></span>
+            <span class="brand-name">Impact<span class="brand-fund">Fund</span> <span class="brand-ai">AI</span></span>
         </a>
 
         <form class="search" action="{{ url_for('home') }}" method="get" role="search">
