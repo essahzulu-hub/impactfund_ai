@@ -1641,6 +1641,11 @@ button {
     padding: 9px 14px;
 }
 
+.auth-page .topbar,
+.auth-page .mobile-nav {
+    display: none;
+}
+
 .auth-page .layout {
     grid-template-columns: minmax(0, 960px);
 }
@@ -1656,6 +1661,12 @@ button {
     border-radius: 12px;
     background: #fff;
     box-shadow: var(--shadow);
+}
+
+.auth-login .auth-card {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 480px;
+    margin: 0 auto;
 }
 
 .auth-hero {

@@ -2,22 +2,10 @@
 {% from "partials/ui.html" import icon %}
 
 {% block title %}Log in | ImpactFund AI{% endblock %}
-{% block body_class %}auth-page{% endblock %}
+{% block body_class %}auth-page auth-login{% endblock %}
 
 {% block content %}
 <div class="auth-card">
-    <section class="auth-hero">
-        <span class="brand-mark auth-brand"><img src="{{ url_for('static', filename='images/impactfund-mark.png') }}" alt=""></span>
-        <p class="auth-eyebrow">WELCOME BACK</p>
-        <h1>Your email knows <span>your role</span></h1>
-        <p>Log in with the email you signed up with. ImpactFund loads your donor or project-creator account automatically.</p>
-        <ul class="auth-points">
-            <li>{{ icon('heart', 16) }} <span><strong>Donors</strong> support campaigns with PayPal</span></li>
-            <li>{{ icon('target', 16) }} <span><strong>Project creators</strong> launch fundraisers</span></li>
-            <li>{{ icon('lock', 16) }} <span>Passwords are hashed, never stored as text</span></li>
-        </ul>
-    </section>
-
     <section class="auth-panel">
         <h2>Log in</h2>
         <p class="muted auth-subtitle">No account type selector here — your account record decides.</p>
