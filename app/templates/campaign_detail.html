@@ -76,7 +76,7 @@
     </div>
     {% elif current_user %}
     <p class="donate-as">
-        {{ avatar(current_user.name, 26) }}
+        {{ avatar(current_user.name, 26, image_url=url_for('profile_picture', user_id=current_user.id) if current_user.profile_picture else none) }}
         <span>Donating as <strong>{{ current_user.name }}</strong> ({{ current_user.role_label }})</span>
     </p>
 

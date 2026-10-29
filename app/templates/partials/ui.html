@@ -77,12 +77,12 @@
 {%- endmacro %}
 
 
-{% macro avatar(name, size=40, cls='') -%}
+{% macro avatar(name, size=40, cls='', image_url=None) -%}
 {%- set label = (name or 'ImpactFund')|string -%}
 {%- set tones = ['blue', 'green', 'purple', 'orange', 'teal', 'pink'] -%}
 <span class="avatar tone-{{ tones[label|length % 6] }} {{ cls }}"
       style="width: {{ size }}px; height: {{ size }}px; font-size: {{ (size * 0.42)|round|int }}px"
-      aria-hidden="true">{{ label[0]|upper }}</span>
+      aria-hidden="true">{% if image_url %}<img class="avatar-image" src="{{ image_url }}" alt="">{% else %}{{ label[0]|upper }}{% endif %}</span>
 {%- endmacro %}
 
 

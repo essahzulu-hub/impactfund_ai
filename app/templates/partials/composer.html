@@ -5,7 +5,7 @@
 <section class="card composer" aria-label="Create a post">
     {% if is_organizer %}
     <div class="composer-top">
-        {{ avatar(current_user.name, 40) }}
+        {{ avatar(current_user.name, 40, image_url=url_for('profile_picture', user_id=current_user.id) if current_user.profile_picture else none) }}
         <a class="composer-input" href="{{ url_for('create_campaign') }}">
             What's on your mind, {{ current_user.name.split(' ')[0] }}? Start a fundraiser…
         </a>
@@ -26,7 +26,7 @@
     </div>
     {% elif is_donor %}
     <div class="composer-top">
-        {{ avatar(current_user.name, 40) }}
+        {{ avatar(current_user.name, 40, image_url=url_for('profile_picture', user_id=current_user.id) if current_user.profile_picture else none) }}
         <a class="composer-input" href="{{ url_for('home') }}#campaigns">
             Find a project to support, {{ current_user.name.split(' ')[0] }}…
         </a>

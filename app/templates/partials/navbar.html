@@ -37,9 +37,10 @@
             </a>
             {% endif %}
 
-            <span class="profile-chip" title="{{ current_user.name }} · {{ current_user.role_label }}">
-                {{ avatar(current_user.name, 36) }}
-            </span>
+            <a class="profile-chip" href="{{ url_for('profile') }}"
+               title="Edit profile" aria-label="Edit profile">
+                {{ avatar(current_user.name, 36, image_url=url_for('profile_picture', user_id=current_user.id) if current_user.profile_picture else none) }}
+            </a>
 
             <form class="logout-form" method="post" action="{{ url_for('logout') }}">
                 <button class="icon-btn" type="submit" title="Log out" aria-label="Log out">

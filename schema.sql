@@ -7,8 +7,12 @@ CREATE TABLE IF NOT EXISTS users (
     display_name  VARCHAR(120) NOT NULL,
     role          VARCHAR(20) NOT NULL CHECK (role IN ('donor', 'organizer')),
     password_hash TEXT NOT NULL,
+    profile_picture BYTEA,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS profile_picture BYTEA;
 
 -- Emails are unique regardless of casing.
 CREATE UNIQUE INDEX IF NOT EXISTS users_email_lower_idx ON users (LOWER(email));

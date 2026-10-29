@@ -11,10 +11,12 @@ the login form only asks for an email and password.
 
 import re
 from functools import wraps
+from io import BytesIO
 from urllib.parse import urlsplit
 
 import psycopg
 from flask import (
+    Response,
     flash,
     redirect,
     render_template,
@@ -22,6 +24,7 @@ from flask import (
     session,
     url_for,
 )
+from PIL import Image, ImageOps, UnidentifiedImageError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 ROLE_LABELS = {"donor": "Donor", "organizer": "Project creator"}
@@ -30,6 +33,38 @@ ROLES = set(ROLE_LABELS)
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 200
+MAX_PROFILE_PICTURE_BYTES = 2 * 1024 * 1024
+MAX_PROFILE_PICTURE_DIMENSION = 4096
+MAX_PROFILE_PICTURE_PIXELS = 16_000_000
+
+
+def _normalize_profile_picture(upload):
+    """Validate an uploaded image and return a small, metadata-free JPEG."""
+    data = upload.stream.read(MAX_PROFILE_PICTURE_BYTES + 1)
+    if not data:
+        raise ValueError("Choose a profile picture to upload.")
+    if len(data) > MAX_PROFILE_PICTURE_BYTES:
+        raise ValueError("Keep the profile picture under 2 MB.")
+
+    try:
+        with Image.open(BytesIO(data)) as image:
+            if image.format not in {"JPEG", "PNG", "WEBP"}:
+                raise ValueError("Use a JPG, PNG, or WebP profile picture.")
+            if (
+                image.width > MAX_PROFILE_PICTURE_DIMENSION
+                or image.height > MAX_PROFILE_PICTURE_DIMENSION
+                or image.width * image.height > MAX_PROFILE_PICTURE_PIXELS
+            ):
+                raise ValueError("Choose an image no larger than 4096 pixels per side.")
+            image.load()
+            image = ImageOps.exif_transpose(image).convert("RGB")
+            image.thumbnail((512, 512))
+            output = BytesIO()
+            image.save(output, format="JPEG", quality=85, optimize=True)
+    except (Image.DecompressionBombError, OSError, UnidentifiedImageError) as error:
+        raise ValueError("That file isn't a valid image.") from error
+
+    return output.getvalue()
 
 
 def current_user():
@@ -45,6 +80,7 @@ def current_user():
         "name": session.get("user_name", ""),
         "role": role,
         "role_label": ROLE_LABELS.get(role, ""),
+        "profile_picture": session.get("user_profile_picture", False),
     }
 
 
@@ -55,6 +91,7 @@ def _start_session(user):
     session["user_email"] = user[1]
     session["user_name"] = user[2]
     session["user_role"] = user[3]
+    session["user_profile_picture"] = bool(user[4]) if len(user) > 4 else False
 
 
 def _safe_next(target):
@@ -178,7 +215,8 @@ def create_auth_bp(app, get_db):
                                 INSERT INTO users
                                     (email, display_name, role, password_hash)
                                 VALUES (%s, %s, %s, %s)
-                                RETURNING id, email, display_name, role
+                                RETURNING id, email, display_name, role,
+                                          profile_picture IS NOT NULL
                                 """,
                                 (
                                     email,
@@ -238,7 +276,8 @@ def create_auth_bp(app, get_db):
                     with conn.cursor() as cur:
                         cur.execute(
                             """
-                            SELECT id, email, display_name, role, password_hash
+                            SELECT id, email, display_name, role,
+                                   profile_picture IS NOT NULL, password_hash
                             FROM users
                             WHERE email = %s
                             """,
@@ -246,7 +285,7 @@ def create_auth_bp(app, get_db):
                         )
                         user = cur.fetchone()
 
-                if user and check_password_hash(user[4], password):
+                if user and check_password_hash(user[5], password):
                     _start_session(user)
                     flash(
                         f"Welcome back, {user[2]}! You're signed in as a "
@@ -273,6 +312,150 @@ def create_auth_bp(app, get_db):
             email=email,
             error=None,
             next_url=next_url,
+        )
+
+    @app.route("/profile", methods=["GET", "POST"])
+    @login_required
+    def profile():
+        user = current_user()
+        error = None
+        profile_name = user["name"]
+
+        if request.method == "POST":
+            action = request.form.get("action")
+
+            if action == "save_profile":
+                profile_name = request.form.get("name", "").strip()
+                picture = request.files.get("profile_picture")
+                try:
+                    if (
+                        request.content_length
+                        and request.content_length
+                        > MAX_PROFILE_PICTURE_BYTES + 128 * 1024
+                    ):
+                        raise ValueError("Keep the profile picture under 2 MB.")
+                    if not profile_name:
+                        raise ValueError("Enter your name or organisation.")
+                    if len(profile_name) > 120:
+                        raise ValueError("Keep your name under 120 characters.")
+
+                    picture_data = None
+                    if picture and picture.filename:
+                        picture_data = _normalize_profile_picture(picture)
+
+                    with get_db() as conn:
+                        with conn.cursor() as cur:
+                            if picture_data is None:
+                                cur.execute(
+                                    "UPDATE users SET display_name = %s WHERE id = %s",
+                                    (profile_name, user["id"]),
+                                )
+                            else:
+                                cur.execute(
+                                    """
+                                    UPDATE users
+                                    SET display_name = %s, profile_picture = %s
+                                    WHERE id = %s
+                                    """,
+                                    (profile_name, picture_data, user["id"]),
+                                )
+                except ValueError as validation_error:
+                    error = str(validation_error)
+                else:
+                    session["user_name"] = profile_name
+                    if picture_data is not None:
+                        session["user_profile_picture"] = True
+                    flash("Your profile has been updated.", "success")
+                    return redirect(url_for("profile"))
+
+            elif action == "remove_picture":
+                with get_db() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            "UPDATE users SET profile_picture = NULL WHERE id = %s",
+                            (user["id"],),
+                        )
+                session["user_profile_picture"] = False
+                flash("Your profile picture has been removed.", "success")
+                return redirect(url_for("profile"))
+
+            elif action == "change_password":
+                current_password = request.form.get("current_password", "")
+                new_password = request.form.get("new_password", "")
+                confirm_password = request.form.get("confirm_password", "")
+
+                if (
+                    len(new_password) < MIN_PASSWORD_LENGTH
+                    or len(new_password) > MAX_PASSWORD_LENGTH
+                ):
+                    error = (
+                        f"Use a password between {MIN_PASSWORD_LENGTH} and "
+                        f"{MAX_PASSWORD_LENGTH} characters."
+                    )
+                elif new_password != confirm_password:
+                    error = "Those passwords do not match."
+                elif len(current_password) > MAX_PASSWORD_LENGTH:
+                    error = "Your current password is incorrect."
+                else:
+                    with get_db() as conn:
+                        with conn.cursor() as cur:
+                            cur.execute(
+                                "SELECT password_hash FROM users WHERE id = %s",
+                                (user["id"],),
+                            )
+                            row = cur.fetchone()
+
+                            if row is None:
+                                session.clear()
+                                flash("Please log in again.", "error")
+                                return redirect(url_for("login"))
+                            if not check_password_hash(row[0], current_password):
+                                error = "Your current password is incorrect."
+                            else:
+                                cur.execute(
+                                    "UPDATE users SET password_hash = %s WHERE id = %s",
+                                    (
+                                        generate_password_hash(new_password),
+                                        user["id"],
+                                    ),
+                                )
+
+                    if error is None:
+                        flash("Your password has been changed.", "success")
+                        return redirect(url_for("profile"))
+
+            else:
+                error = "Choose a profile update to continue."
+
+        return (
+            render_template(
+                "profile.html",
+                error=error,
+                profile_name=profile_name,
+            ),
+            400 if error else 200,
+        )
+
+    @app.get("/users/<int:user_id>/profile-picture")
+    def profile_picture(user_id):
+        with get_db() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT profile_picture FROM users WHERE id = %s",
+                    (user_id,),
+                )
+                row = cur.fetchone()
+
+        if row is None or row[0] is None:
+            return "Profile picture not found", 404
+
+        return Response(
+            row[0],
+            mimetype="image/jpeg",
+            headers={
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+            },
         )
 
     @app.post("/logout")

@@ -8,7 +8,7 @@
     {% if can_create %}
     <a class="story story-create" href="{{ url_for('create_campaign') }}">
         <span class="story-create-top">
-            {% if current_user %}{{ avatar(current_user.name, 32) }}{% else %}{{ avatar('Guest', 32) }}{% endif %}
+            {% if current_user %}{{ avatar(current_user.name, 32, image_url=url_for('profile_picture', user_id=current_user.id) if current_user.profile_picture else none) }}{% else %}{{ avatar('Guest', 32) }}{% endif %}
         </span>
         <span class="story-create-plus">{{ icon('plus', 18) }}</span>
         <span class="story-create-label">Create a campaign</span>
