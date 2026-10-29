@@ -15,10 +15,6 @@
     {% include "partials/navbar.html" %}
 
     <div class="layout">
-        <aside class="sidebar sidebar-left" aria-label="Shortcuts">
-            {% include "partials/sidebar_left.html" %}
-        </aside>
-
         <main class="feed" id="main-content">
             {% include "partials/flashes.html" %}
             {% block content %}{% endblock %}
