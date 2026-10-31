@@ -91,6 +91,25 @@ pip install -r requirements.txt
 psql "$DATABASE_URL" -f schema.sql
 ```
 
+## Local demo accounts
+
+Six sample accounts have been added to the configured local database: three
+donors and three project creators. These accounts use the reserved
+`example.invalid` domain and are for local testing only; they are not created
+in Supabase or Render.
+
+| Name | Role | Email | Password |
+|---|---|---|---|
+| Maya Chen | Donor | `demo.donor1@example.invalid` | `J395psPmS6YBxcDbA_0PGkEY` |
+| Noah Patel | Donor | `demo.donor2@example.invalid` | `QGlWazXn0gEMvz4Uk4w3mO1Q` |
+| Amina Okafor | Donor | `demo.donor3@example.invalid` | `RnOiqdN-QNoH2Wpk6ghkVAj7` |
+| Greenfield Community Garden | Project creator | `demo.organizer1@example.invalid` | `6o2nBRq6H-m0kNqFQpSOAyKR` |
+| Northside Youth Arts | Project creator | `demo.organizer2@example.invalid` | `ilsxrkgcaE3VJ8oidCE11W2Z` |
+| Harbor Food Collective | Project creator | `demo.organizer3@example.invalid` | `KjxCuVETrC9ifqLlcisw8WFs` |
+
+These are demo credentials, not private account credentials. Do not copy these
+accounts into a public or production database.
+
 ## Run
 
 ```bash
